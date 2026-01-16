@@ -1,0 +1,77 @@
+// ============================
+// Multi-Tenant Auth System (Clerk-style)
+// Includes Password Policies & Memberships
+// dbdiagram.io compatible
+// ============================
+
+Table users {
+  id varchar [pk, note: "Mongo ObjectId"]
+  full_name varchar [not null]
+  email varchar [unique, not null]
+  password varchar [not null]
+  phone varchar [note: "optional"]
+  isVerified boolean
+  public_metadata json
+  private_metadata json
+  created_at datetime
+  updated_at datetime
+}
+
+Table organizations {
+  id varchar [pk, note: "Mongo ObjectId"]
+  name varchar [not null]
+  slug varchar [unique, not null]
+  password_policy json [note: "Defines minLength, requireNumbers, uppercase, specialChars, etc."]
+  require_phone boolean [default: false, note: "If true, org users must provide phone"]
+  created_at datetime
+  updated_at datetime
+}
+
+Table memberships {
+  id varchar [pk, note: "Mongo ObjectId"]
+  user_id varchar [ref: > users.id, not null]
+  organization_id varchar [ref: > organizations.id, not null]
+  role varchar [note: "owner, admin, member"]
+  created_at datetime
+  updated_at datetime
+}
+
+Table sessions {
+  id varchar [pk, note: "Mongo ObjectId"]
+  user_id varchar [ref: > users.id, not null]
+  token varchar
+  expires_at datetime
+  created_at datetime
+  updated_at datetime
+}
+
+Table projects {
+  id varchar [pk, note: "Example resource scoped to org"]
+  organization_id varchar [ref: > organizations.id, not null]
+  name varchar
+  description text
+  created_at datetime
+  updated_at datetime
+}
+
+Table audit_logs {
+  id varchar [pk, note: "Optional"]
+  organization_id varchar [ref: > organizations.id]
+  user_id varchar [ref: > users.id]
+  action varchar
+  metadata json
+  created_at datetime
+}
+
+// ============================
+// Relationships
+// ============================
+
+// Ref: memberships.user_id > users.id
+// Ref: memberships.organization_id > organizations.id
+
+// Ref: sessions.user_id > users.id
+
+// Ref: projects.organization_id > organizations.id
+// Ref: audit_logs.organization_id > organizations.id
+// Ref: audit_logs.user_id > users.id
