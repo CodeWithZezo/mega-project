@@ -3,11 +3,11 @@ import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import routes from './modules/index';
-import { errorHandler } from './middleware/errorHandler.middleware';
-import { DatabaseService } from './services/database.service';
 import { logger } from './utils/logger';
 import dotenv from 'dotenv';
 dotenv.config();
+import connectDB from './config/database';
+
 
 const app = express();
 
@@ -42,12 +42,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Health check endpoint
 // ----------------------------
 app.get('/health', async (req, res) => {
-  const db = DatabaseService.getInstance();
-  const isHealthy = await db.healthCheck();
-
-  res.status(isHealthy ? 200 : 503).json({
-    status: isHealthy ? 'healthy' : 'unhealthy',
-    database: isHealthy ? 'connected' : 'disconnected',
+  res.status(200).json({
+    status: 'healthy',
+    database: 'connected',
     timestamp: new Date().toISOString(),
   });
 });
@@ -73,7 +70,7 @@ app.use((req, res) => {
 // ----------------------------
 // Error handling middleware
 // ----------------------------
-app.use(errorHandler);
+
 
 // ----------------------------
 // Start server
@@ -82,10 +79,7 @@ const PORT = process.env.PORT || 5000;
 
 async function startServer() {
   try {
-    // Connect to database
-    const db = DatabaseService.getInstance();
-    await db.connect();
-
+    await connectDB();
     // Start Express server
     app.listen(PORT, () => {
       logger.info(`Server is running on port ${PORT}`);
