@@ -9,5 +9,5 @@ import {create} from "zustand";
       logout: () => set({user: null}),
 
     }));
-
+    
     export default useAuthStore;
