@@ -23,6 +23,7 @@ const userSchema: Schema<IUser> = new Schema(
     passwordHash: {
       type: String,
       required: [true, "Password hash is required"],
+      select: false,
     },
     phone: {
       type: String,

@@ -1,6 +1,7 @@
 // ==================== src/types/models.types.ts ====================
 import { Document, Types } from 'mongoose';
 import { Role, Status } from './enums';
+
 export interface IUser extends Document {
   _id: Types.ObjectId;
   fullName?: string;
@@ -12,6 +13,15 @@ export interface IUser extends Document {
   privateMetadata?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IUserDocument extends Document {
+    _id: Types.ObjectId;
+    fullName: string;
+    email: string;
+    passwordHash: string;
+    phone: string;
+    isVerified: boolean;
 }
 
 export interface IOrganization extends Document {

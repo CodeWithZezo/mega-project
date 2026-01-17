@@ -1,20 +1,30 @@
 import { Request, Response } from "express";
-import { User } from "../../models/schema/user.schema";
+import { UserService } from "./user.service";
 
-export class userController { 
-     static async signup(req:Request,res:Response){
-          try{
-            const {fullName,email,password,phone} = req.body;
-            const exsistingEmail = await User.findOne({email});
-            if(exsistingEmail){
-                return res.status(400).json({message:"Email already exists"});
-            }
-            
-            const user = await User.create({fullName,email,passwordHash:password,phone});
-            return res.status(201).json({message:"User created successfully",user});
-          }catch(error){
-            
-          }   
-     }
+export class UserController {
+  private userService: UserService;
 
+  constructor(userService?: UserService) {
+    this.userService = userService ?? new UserService();
+  }
+
+  signup = async (req: Request, res: Response) => {
+    try {
+      const { status, body } = await this.userService.signup(req.body);
+      return res.status(status).json(body);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  };
+
+  login = async (req: Request, res: Response) => {
+    try {
+      const { status, body } = await this.userService.login(req.body);
+      return res.status(status).json(body);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  };
 }

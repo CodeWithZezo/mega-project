@@ -1,0 +1,92 @@
+import { User } from "../../models/schema/user.schema";
+import { JWTUtils } from "../../utils/jwt.utils";
+import { PasswordUtils } from "../../utils/password.utils";
+import { ISignupRequest, ILoginRequest, IUserDocument, AuthResponse, IServiceResponse } from "../../types/auth.types";
+
+export class UserService {
+
+  async signup(data: ISignupRequest): Promise<IServiceResponse<AuthResponse | { message: string; errors?: any }>> {
+    const { fullName, email, password, phone } = data;
+
+    const passwordValidation = PasswordUtils.validate(password);
+    if (!passwordValidation.valid) {
+      return { status: 400, body: { message: "Invalid password", errors: passwordValidation.errors } };
+    }
+
+    const passwordHash = await PasswordUtils.hash(password);
+
+    try {
+      const user = await User.create({
+        fullName,
+        email: email.toLowerCase().trim(),
+        phone,
+        passwordHash,
+        isVerified: false
+      });
+
+      const { accessToken, refreshToken } = this.tokenResponse(user);
+
+      return {
+        status: 201,
+        body: {
+          message: "User created successfully",
+          user: {
+            id: user._id.toString(),
+            fullName: user.fullName,
+            email: user.email,
+            phone: user.phone
+          },
+          accessToken,
+          refreshToken
+        }
+      };
+
+    } catch (error: any) {
+      if (error.code === 11000) {
+        return { status: 400, body: { message: "Email or Phone already exists" } };
+      }
+      console.error(error);
+      return { status: 500, body: { message: "Internal server error" } };
+    }
+  }
+
+  async login(data: ILoginRequest): Promise<IServiceResponse<AuthResponse | { message: string }>> {
+    const { email, password } = data;
+
+    // Explicitly select passwordHash
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select("+passwordHash") as IUserDocument;
+    if (!user) return { status: 404, body: { message: "User not found" } };
+
+    const isPasswordMatched = await PasswordUtils.compare(password, user.passwordHash);
+    if (!isPasswordMatched) return { status: 401, body: { message: "Invalid credentials" } };
+
+    const { accessToken, refreshToken } = this.tokenResponse(user);
+
+    return {
+      status: 200,
+      body: {
+        message: "User logged in successfully",
+        user: {
+          id: user._id.toString(),
+          fullName: user.fullName,
+          email: user.email,
+          phone: user.phone
+        },
+        accessToken,
+        refreshToken
+      }
+    };
+  }
+
+  private tokenResponse(user: IUserDocument) {
+    const payload = {
+      userId: user._id.toString(),
+      email: user.email
+    };
+
+    return {
+      accessToken: JWTUtils.generateAccessToken(payload),
+      refreshToken: JWTUtils.generateRefreshToken(payload)
+    };
+  }
+}
