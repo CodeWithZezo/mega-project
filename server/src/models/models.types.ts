@@ -3,20 +3,18 @@ import { Document, Types } from 'mongoose';
 import { Role, Status } from './enums';
 
 export interface IUser extends Document {
-  _id: Types.ObjectId;
-  fullName?: string;
+  fullName: string;
   email: string;
-  passwordHash?: string;
-  phone?: string| null;
+  passwordHash: string;
+  phone?: string | null;
   isVerified: boolean;
-  publicMetadata?: Record<string, any>;
-  privateMetadata?: Record<string, any>;
+  publicMetadata: Map<string, any>;
+  privateMetadata: Map<string, any>;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface IUserDocument extends Document {
-    _id: Types.ObjectId;
     fullName: string;
     email: string;
     passwordHash: string;
@@ -25,7 +23,6 @@ export interface IUserDocument extends Document {
 }
 
 export interface IOrganization extends Document {
-  _id: Types.ObjectId;
   name: string;
   slug: string;
   passwordPolicy: IPasswordPolicy;
@@ -42,7 +39,6 @@ export interface IPasswordPolicy {
 }
 
 export interface IMembership extends Document {
-  _id: Types.ObjectId;
   userId: Types.ObjectId;
   orgId: Types.ObjectId;
   role: Role;

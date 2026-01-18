@@ -1,7 +1,8 @@
 import { User } from "../../models/schema/user.schema";
 import { JWTUtils } from "../../utils/jwt.utils";
 import { PasswordUtils } from "../../utils/password.utils";
-import { ISignupRequest, ILoginRequest, IUserDocument, AuthResponse, IServiceResponse } from "../../types/auth.types";
+import { ISignupRequest, ILoginRequest, AuthResponse, IServiceResponse } from "../../types/auth.types";
+import { IUser } from "../../models/models.types";
 
 export class UserService {
 
@@ -16,13 +17,14 @@ export class UserService {
     const passwordHash = await PasswordUtils.hash(password);
 
     try {
-      const user = await User.create({
+      const user: IUser = await User.create({
         fullName,
         email: email.toLowerCase().trim(),
-        phone,
+        phone: phone ? phone.toString() : null,
         passwordHash,
         isVerified: false
       });
+
 
       const { accessToken, refreshToken } = this.tokenResponse(user);
 
@@ -31,10 +33,10 @@ export class UserService {
         body: {
           message: "User created successfully",
           user: {
-            id: user._id.toString(),
+            id: user._id,
             fullName: user.fullName,
             email: user.email,
-            phone: user.phone
+            phone: user.phone?.toString() ?? undefined
           },
           accessToken,
           refreshToken
@@ -54,7 +56,7 @@ export class UserService {
     const { email, password } = data;
 
     // Explicitly select passwordHash
-    const user = await User.findOne({ email: email.toLowerCase().trim() }).select("+passwordHash") as IUserDocument;
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select("+passwordHash") as IUser;
     if (!user) return { status: 404, body: { message: "User not found" } };
 
     const isPasswordMatched = await PasswordUtils.compare(password, user.passwordHash);
@@ -67,7 +69,7 @@ export class UserService {
       body: {
         message: "User logged in successfully",
         user: {
-          id: user._id.toString(),
+          id: user._id,
           fullName: user.fullName,
           email: user.email,
           phone: user.phone
@@ -78,7 +80,7 @@ export class UserService {
     };
   }
 
-  private tokenResponse(user: IUserDocument) {
+  private tokenResponse(user: IUser) {
     const payload = {
       userId: user._id.toString(),
       email: user.email

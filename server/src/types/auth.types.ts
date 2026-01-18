@@ -1,45 +1,38 @@
-import { Types, Document } from "mongoose";
+import { Types, Document, mongo } from "mongoose";
 
+// JWT payload
 export interface JWTPayload {
   userId: string;
   email: string;
 }
 
+// Auth response returned by signup/login
 export interface AuthResponse {
+  message: string; // Added to match your returned body
   user: {
-    id: string;
+    id: Types.ObjectId;
     fullName: string;
     email: string;
-    phone: string;
+    phone: string | undefined | null;
   };
   accessToken: string;
   refreshToken: string;
 }
 
+// Login request
 export interface ILoginRequest {
   email: string;
   password: string;
 }
 
+// Signup request
 export interface ISignupRequest {
-  fullName: string;
+  fullName: string; 
   email: string;
   password: string;
   phone: string;
 }
-
-export interface IUserDocument extends Document {
-  _id: Types.ObjectId;
-  fullName: string;
-  email: string;
-  passwordHash: string;
-  phone: string;
-  isVerified: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// Service response type
+// Generic service response
 export interface IServiceResponse<T> {
   status: number;
   body: T;
