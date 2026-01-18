@@ -1,23 +1,35 @@
 import React, { useState } from 'react';
-import { Shield, Github, Chrome, Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
+import { Shield, Github, Chrome, Mail, Lock, Eye, EyeOff, User, Phone } from 'lucide-react';
+import {signup} from "../../store/auth"
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 export default function SignUp() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    phone:''
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (formData.password !== formData.confirmPassword) {
       alert('Passwords do not match!');
       return;
     }
     console.log('Sign up attempt:', formData);
-    // Add your signup logic here
+    const res = await signup(formData);
+    if(res.success){
+      toast.success("Signup successful");
+      navigate("/dashboard");
+    }
+    else{
+      toast.error(res.message);
+    }
   };
 
   const handleChange = (e) => {
@@ -146,7 +158,7 @@ export default function SignUp() {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   className="w-full pl-11 pr-12 py-3 bg-slate-900/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-white placeholder-slate-500 transition"
-                  placeholder="••••••••"
+                  placeholder="••••••••" 
                 />
                 <button
                   type="button"
@@ -157,6 +169,25 @@ export default function SignUp() {
                 </button>
               </div>
             </div>
+            {/* add phone field */}
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-slate-300 mb-2">
+                Phone number (optional)
+              </label>
+              <div className="relative">
+                <Phone className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                <input
+                  id="phone"
+                  name="phone"
+                  type="text"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="w-full pl-11 pr-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-white placeholder-slate-500 transition"
+                  placeholder="1234567890 "
+                />
+              </div>
+            </div>
+
 
             {/* Terms and Conditions */}
             <div>

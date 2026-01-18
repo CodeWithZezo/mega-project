@@ -3,6 +3,8 @@ import { JWTUtils } from "../../utils/jwt.utils";
 import { PasswordUtils } from "../../utils/password.utils";
 import { ISignupRequest, ILoginRequest, AuthResponse, IServiceResponse } from "../../types/auth.types";
 import { IUser } from "../../models/models.types";
+import { Session } from "../../models/schema/session.schema";
+import { AuthRequest } from "../../middleware/auth.middleware";
 
 export class UserService {
 
@@ -27,6 +29,11 @@ export class UserService {
 
 
       const { accessToken, refreshToken } = this.tokenResponse(user);
+
+      const session = await Session.create({
+        userId: user._id,
+        refreshToken,
+      });
 
       return {
         status: 201,
@@ -64,6 +71,11 @@ export class UserService {
 
     const { accessToken, refreshToken } = this.tokenResponse(user);
 
+    const session = await Session.create({
+      userId: user._id,
+      refreshToken,
+    });
+
     return {
       status: 200,
       body: {
@@ -78,6 +90,17 @@ export class UserService {
         refreshToken
       }
     };
+  }
+
+  async currentUser(req: AuthRequest) {
+    try {
+      const user = await User.findById(req.user?.userId);
+      if (!user) return { status: 404, body: { message: "User not found" } };
+      return { status: 200, body: { user } };
+    } catch (error) {
+      console.error(error);
+      return { status: 500, body: { message: "Internal server error" } };
+    }
   }
 
   private tokenResponse(user: IUser) {
